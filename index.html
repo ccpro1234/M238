@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Genius Random AI Ultra V2</title>
+
+<style>
+:root{
+  /* Palette สีทองหรูหราและ Neon สวยงาม */
+  --bg-dark: #020617;
+  --gold: #ffd700;
+  --gold-dim: #b8860b;
+  --glass: rgba(20, 20, 35, 0.6);
+  --border-glass: rgba(255, 215, 0, 0.2);
+  --neon-blue: #00f3ff;
+  --neon-red: #ff0055;
+  --neon-green: #00ff9d;
+  --shadow-glow: 0 0 15px rgba(255, 215, 0, 0.3);
+}
+*{box-sizing:border-box; outline:none;}
+body{
+  margin:0;
+  padding:20px;
+  font-family:"Segoe UI", "Sarabun", sans-serif;
+  background: 
+    radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.15), transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.15), transparent 40%),
+    linear-gradient(135deg, #020617, #0f172a, #020617);
+  color:#fff;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ===== LOGIN ===== */
+#loginBox{
+  position:fixed;
+  inset:0;
+  background:rgba(2,6,23,.98);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+  backdrop-filter:blur(20px);
+}
+.loginCard{
+  background:rgba(255,255,255,.03);
+  border:1px solid var(--gold);
+  box-shadow:0 0 30px rgba(255,215,0,.2);
+  padding:40px;
+  border-radius:24px;
+  width:340px;
+  text-align:center;
+  position:relative;
+}
+.loginCard::before{
+  content:"";
+  position:absolute;
+  inset:-2px;
+  border-radius:26px;
+  background:linear-gradient(45deg, var(--gold), transparent, var(--neon-blue));
+  z-index:-1;
+  animation:spinBorder 4s linear infinite;
+}
+@keyframes spinBorder{0%{filter:hue-rotate(0deg);}100%{filter:hue-rotate(360deg);}}
+
+.loginCard h2{color:var(--gold); margin-bottom:25px; text-transform:uppercase; letter-spacing:2px;}
+.loginCard input{
+  width:100%;
+  padding:14px;
+  margin-bottom:15px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(0,0,0,.4);
+  color:#fff;
+  font-size:16px;
+  transition:0.3s;
+}
+.loginCard input:focus{border-color:var(--gold); box-shadow:0 0 10px rgba(255,215,0,.2);}
+.loginCard button{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  font-weight:700;
+  font-size:16px;
+  background:linear-gradient(135deg, var(--gold), var(--gold-dim));
+  color:#000;
+  cursor:pointer;
+  transition:0.3s;
+  text-transform:uppercase;
+}
+.loginCard button:hover{transform:scale(1.02); box-shadow:0 0 20px rgba(255,215,0,.4);}
+.loginError{color:#ff4757; margin-top:10px; font-size:14px;}
+
+/* ===== MAIN UI ===== */
+.container{max-width:1400px;margin:auto; position:relative;}
+h1{
+  text-align:center;
+  font-size:24px;
+  color:var(--gold);
+  text-shadow:0 0 10px rgba(255,215,0,.6);
+  margin-bottom:5px;
+  letter-spacing:1px;
+}
+.expire{
+  text-align:center;
+  font-size:13px;
+  color:#8892b0;
+  margin-bottom:20px;
+  font-family:monospace;
+}
+
+/* Controls */
+.controls{
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  margin-bottom:20px;
+  flex-wrap:wrap;
+}
+button.action-btn{
+  padding:12px 24px;
+  border-radius:50px;
+  border:1px solid rgba(255,255,255,.1);
+  font-size:16px;
+  font-weight:600;
+  cursor:pointer;
+  color:#fff;
+  background:rgba(255,255,255,.05);
+  backdrop-filter:blur(10px);
+  transition:all 0.2s ease;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+button.action-btn:hover{background:rgba(255,255,255,.1); transform:translateY(-2px);}
+button.action-btn.p{border-color:var(--neon-blue); color:var(--neon-blue); box-shadow:0 0 10px rgba(0,243,255,.1);}
+button.action-btn.p:hover{background:var(--neon-blue); color:#000;}
+button.action-btn.b{border-color:var(--neon-red); color:var(--neon-red); box-shadow:0 0 10px rgba(255,0,85,.1);}
+button.action-btn.b:hover{background:var(--neon-red); color:#000;}
+button.action-btn.t{border-color:var(--neon-green); color:var(--neon-green); box-shadow:0 0 10px rgba(0,255,157,.1);}
+button.action-btn.t:hover{background:var(--neon-green); color:#000;}
+
+/* Stats Bar */
+.stats-bar{
+  display:flex;
+  justify-content:center;
+  gap:20px;
+  margin-bottom:25px;
+  background:var(--glass);
+  padding:15px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.05);
+}
+.stat-item{text-align:center;}
+.stat-val{font-size:20px; font-weight:700; display:block;}
+.stat-label{font-size:11px; color:#8892b0; text-transform:uppercase; letter-spacing:1px;}
+.c-P{color:var(--neon-blue); text-shadow:0 0 10px rgba(0,243,255,.5);}
+.c-B{color:var(--neon-red); text-shadow:0 0 10px rgba(255,0,85,.5);}
+.c-T{color:var(--neon-green); text-shadow:0 0 10px rgba(0,255,157,.5);}
+
+/* Main Prediction Area */
+.prediction-box{
+  text-align:center;
+  margin-bottom:20px;
+  padding:20px;
+  background:linear-gradient(180deg, rgba(255,215,0,.05), rgba(0,0,0,0));
+  border-radius:20px;
+  border:1px solid rgba(255,215,0,.2);
+  position:relative;
+  overflow:hidden;
+}
+.prediction-box::after{
+  content:"";
+  position:absolute;
+  top:0; left:-100%;
+  width:100%; height:100%;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.1), transparent);
+  animation:shine 3s infinite;
+}
+@keyframes shine{0%{left:-100%} 100%{left:100%}}
+
+.recommend-text{
+  font-size:16px; color:#ccc; margin-bottom:5px;
+}
+.recommend-result{
+  font-size:42px; font-weight:800; letter-spacing:2px;
+  color:#fff;
+  text-shadow:0 0 20px currentColor;
+}
+.recommend-result.P{color:var(--neon-blue);}
+.recommend-result.B{color:var(--neon-red);}
+.recommend-result.T{color:var(--neon-green); text-shadow:0 0 10px var(--neon-green);}
+
+/* Grid Layout for Roads & Stats */
+.main-grid{
+  display:grid;
+  grid-template-columns: 2fr 1fr;
+  gap:20px;
+  margin-bottom:20px;
+}
+@media(max-width:900px){.main-grid{grid-template-columns:1fr;}}
+
+.road-container, .quick-view{
+  background:var(--glass);
+  padding:20px;
+  border-radius:20px;
+  border:1px solid rgba(255,255,255,.05);
+  backdrop-filter:blur(10px);
+}
+.road-title{
+  color:var(--gold); font-size:18px; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;
+}
+.grid-plate{
+  display:grid;
+  grid-template-columns:repeat(20, 1fr);
+  gap:4px;
+}
+.cell-plate{
+  aspect-ratio:1;
+  border-radius:50%;
+  font-size:10px;
+  font-weight:bold;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 0 5px rgba(0,0,0,.5);
+}
+.P-plate{background:var(--neon-blue); box-shadow:0 0 8px var(--neon-blue); color:#000;}
+.B-plate{background:var(--neon-red); box-shadow:0 0 8px var(--neon-red); color:#fff;}
+.T-plate{background:var(--neon-green); box-shadow:0 0 8px var(--neon-green); color:#000;}
+
+/* Quick View */
+.q-block{
+  background:rgba(0,0,0,.3);
+  border-radius:12px;
+  padding:12px;
+  margin-bottom:12px;
+  border-left:3px solid var(--gold);
+}
+.q-header{
+  font-size:12px; color:#aaa; margin-bottom:8px; display:flex; justify-content:space-between;
+}
+.q-row{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:6px 0; border-bottom:1px solid rgba(255,255,255,.05); font-size:13px;
+}
+.q-row:last-child{border:none;}
+.q-badge{
+  padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold; margin-left:5px;
+}
+.bad-P{background:rgba(0,243,255,.2); color:var(--neon-blue);}
+.bad-B{background:rgba(255,0,85,.2); color:var(--neon-red);}
+
+/* Strategies Grid */
+.strategies-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap:12px;
+}
+.strategy-card{
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.05);
+  padding:12px;
+  border-radius:12px;
+  font-size:13px;
+  transition:0.3s;
+  position:relative;
+  overflow:hidden;
+}
+.strategy-card:hover{background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.1);}
+.strategy-card.best{
+  border:1px solid var(--gold);
+  box-shadow:0 0 10px rgba(255,215,0,.1);
+}
+.s-name{color:#ccc; font-size:12px; margin-bottom:5px;}
+.s-pick{font-weight:bold; font-size:16px; margin-bottom:5px;}
+.s-acc{font-size:11px; color:#888; margin-top:5px;}
+.track-dots{display:flex; gap:2px; flex-wrap:wrap; margin-top:5px;}
+.dot{width:6px; height:6px; border-radius:50%;}
+
+
+/* ===== MASTER GRID ===== */
+#masterTrackGrid{
+  display: grid;
+
+  grid-template-columns: repeat(20, 12px); /* 20 ช่องเป๊ะ */
+
+  gap: 2px;
+
+  justify-content: center;
+}
+
+
+/* Utilities */
+.blink{animation:blink 1s infinite;}
+@keyframes blink{50%{opacity:0.5}}
+
+.master-box{
+  width:12px;          /* ใหญ่ขึ้นนิด */
+  height:12px;
+  font-size:9px;       /* ✔ ✖ ชัดขึ้น */
+  border-radius:2px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+  line-height:1;
+}
+
+.master-win{
+  background:#00ff9d;
+  color:#000;
+  box-shadow:0 0 6px #00ff9d;
+}
+
+.master-lose{
+  background:#ff0055;
+  color:#fff;
+  box-shadow:0 0 6px #ff0055;
+}
+
+@keyframes blinkConfidence {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(1.1); }
+}
+
+.blink-confidence {
+  animation: blinkConfidence 0.8s infinite;
+  display: inline-block;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="loginBox">
+  <div class="loginCard">
+    <h2>Genius AI V2</h2>
+ <input id="user" placeholder="Username">
+
+<input id="pass" type="password" placeholder="Password">
+
+<!-- toggle show password -->
+<label style="font-size:12px; color:#aaa; display:flex; align-items:center; gap:6px; margin-bottom:10px;">
+  <input type="checkbox" id="showPass" onclick="togglePassword()">
+  แสดงรหัสผ่าน
+</label>
+
+<button onclick="login()">เข้าสู่ระบบ</button>
+
+<div class="loginError" id="loginError"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="container" id="app" style="display:none">
+  
+  <h1>GENIUS RANDOM AI ULTRA V2</h1>
+  <div class="expire"></div>
+
+  <div class="controls">
+    <button class="action-btn p" onclick="addResult('P')">🔵 Player</button>
+    <button class="action-btn b" onclick="addResult('B')">🔴 Banker</button>
+    <button class="action-btn t" onclick="addResult('T')">🟢 Tie</button>
+    
+    <div style="width:10px"></div> <!-- Spacer -->
+    
+    <button class="action-btn" onclick="undo()" style="border-color:#aaa; color:#aaa">↩ ย้อนกลับ</button>
+    <button class="action-btn" onclick="clearAll()" style="border-color:#aaa; color:#aaa">🗑 ล้างค่า</button>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-item">
+      <span class="stat-val c-P" id="pCount">0</span>
+      <span class="stat-label">Player</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-val c-B" id="bCount">0</span>
+      <span class="stat-label">Banker</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-val c-T" id="tCount">0</span>
+      <span class="stat-label">Tie</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-val" id="total" style="color:#fff">0</span>
+      <span class="stat-label">Total</span>
+    </div>
+  </div>
+
+  <!-- PREDICTION HERO -->
+  <div class="prediction-box">
+
+  <div style="margin-top:15px;">
+    <div style="font-size:12px; color:#888; margin-bottom:6px;">
+      ผล AI (25 ไม้ล่าสุด)
+    </div>
+
+    <!-- ✅ ต้องเป็น div -->
+    <div id="masterTrackGrid"></div>
+
+    <div class="recommend-text">AI วิเคราะห์และแนะนำ (Master Formula)</div>
+    <div class="recommend-result" id="masterPick">รอข้อมูล...</div>
+
+    <div style="margin-top:10px; font-size:14px; color:#888;">
+      ความมั่นใจ: <span id="confidence" style="color:var(--gold)">-</span> | 
+      แม่นสุด: <span id="bestStratName" style="color:#fff">-</span>
+    </div>
+  </div>
+
+
+
+  <div class="main-grid">
+    <!-- LEFT: BEAD ROAD -->
+    <div class="road-container">
+      <div class="road-title">
+        <span>(Bead Road)</span>
+        <span style="font-size:12px; color:#888" id="accuracyDisplay">แม่น: 0%</span>
+      </div>
+      <div class="grid-plate" id="beadRoad"></div>
+    </div>
+
+    <!-- RIGHT: QUICK STATS -->
+    <div class="quick-view">
+      <div class="road-title">⚡ Live Status</div>
+      
+      <div class="q-block">
+        <div class="q-header">Top สูตรแม่นสุด (Current)</div>
+        <div id="topStrats"></div>
+      </div>
+
+      <div class="q-block">
+        <div class="q-header">สถิติ 5 ไม้ล่าสุด</div>
+        <div id="last5Stats" style="font-size:24px; letter-spacing:5px; text-align:center; margin-top:5px;">
+          -
+        </div>
+      </div>
+      
+      <div class="q-block">
+        <div class="q-header">Pattern Trend</div>
+        <div id="patternTrend" style="font-size:13px; color:#aaa;">กำลังวิเคราะห์...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STRATEGIES GRID -->
+  <div class="road-title">ระบบสูตรทั้งหมด (27 Formulas)</div>
+  <div class="strategies-grid" id="strategiesGrid"></div>
+
+</div>
+
+<script>
+// ===== CONFIG & STATE =====
+const EXPIRE_DATE = new Date("2026-05-30T23:59:59");
+let results = [];
+let strategies = [];
+
+// Strategy Names (Updated to 27)
+const S_NAMES = [
+  "สุ่มล้วน (Random)", "ตามสถิติรวม", "สวนสถิติรวม", "ตามไม้ล่าสุด", "สวนไม้ล่าสุด", "วิเคราะห์ 6 ไม้",
+  "ตาม 3 ไม้", "สวน 3 ไม้", "ตาม 10 ไม้", "สวน 10 ไม้", "ตามสตรีค", "ตัดสตรีค",
+  "ฝั่งชนะล่าสุด", "ฝั่งแพ้ล่าสุด", "ตามครึ่งแรก", "สวนครึ่งแรก", "Bias Player", "Bias Banker",
+  "สลับ P/B", "ย้อนกลับไม้ก่อน", "กัน Tie Bias", "เน้น Banker (70%)", "เน้น Player (70%)", 
+  "แอนติ Volatility", "ตาม Trend", "เบรค Pattern", 
+  "👑 MASTER AI (Auto)" // สูตรที่ 27
+];
+
+// Initialize Strategies
+function initStrategies() {
+  strategies = S_NAMES.map(name => ({
+    name: name,
+    pick: null,
+    track: [], // History of wins/losses
+    weight: 0  // For AI decision
+  }));
+}
+
+// ===== LOGIC: WEIGHTED RANDOM =====
+// สร้างความน่าจะเป็นแบบถ่วงน้ำหนัก (ไม่ใช่ 50:50)
+function weightedRandom(chance) {
+  // chance คือ % ที่จะออก Player (0-100)
+  return Math.random() * 100 < chance ? "P" : "B";
+}
+
+// ฟังก์ชันสุ่มหมุน 10,000 รอบแบบถ่วงน้ำหนัก
+function spin10k(getChanceFunc) {
+  let pVotes = 0;
+  for(let i=0; i<10000; i++) {
+    let pChance = getChanceFunc();
+    if(weightedRandom(pChance) === "P") pVotes++;
+  }
+  return pVotes >= 5000 ? "P" : "B";
+}
+
+// ===== CORE LOGIC =====
+function calculateNextPick() {
+  if (results.length === 0) return; // ยังไม่มีข้อมูล
+
+  const last = results[results.length - 1];
+  const pTotal = results.filter(x => x === "P").length;
+  const bTotal = results.filter(x => x === "B").length;
+  const total = results.length;
+  
+  // Helper: Get last N non-tie results
+  const getLast = (n) => results.filter(x => x !== "T").slice(-n);
+  
+  // สถิติย่อย
+  const last3 = getLast(3);
+  const last6 = getLast(6);
+  const last10 = getLast(10);
+  const p3 = last3.filter(x => x === "P").length;
+  const b3 = last3.filter(x => x === "B").length;
+  const p6 = last6.filter(x => x === "P").length;
+  const b6 = last6.filter(x => x === "B").length;
+  const p10 = last10.filter(x => x === "P").length;
+  const b10 = last10.filter(x => x === "B").length;
+
+  // Pattern Detection
+  let isStreakP = false, isStreakB = false;
+  if (last6.length >= 2) {
+    let check = last6.join('');
+    if(check.includes('PPP')) isStreakP = true;
+    if(check.includes('BBB')) isStreakB = true;
+  }
+
+  // --- CALCULATE EACH STRATEGY (0-25) ---
+  
+  // 0. Pure Random
+  strategies[0].pick = spin10k(() => 50);
+
+  // 1. Follow Total Stats
+  let pRate1 = (pTotal / total) * 100;
+  strategies[1].pick = spin10k(() => pRate1); // ถ้า P เยอะ โอกาสออก P สูงตามสถิติ
+
+  // 2. Against Total Stats
+  strategies[2].pick = spin10k(() => 100 - pRate1);
+
+  // 3. Follow Last
+  strategies[3].pick = last === "P" ? "P" : (last === "B" ? "B" : spin10k(()=>50));
+
+  // 4. Against Last
+  strategies[4].pick = last === "P" ? "B" : (last === "B" ? "P" : spin10k(()=>50));
+
+  // 5. Analyze 6
+  let pRate6 = (p6 / 6) * 100;
+  strategies[5].pick = spin10k(() => (pRate6 * 1.5) > 50 ? 80 : 20); // Amplify bias
+
+  // 6-9. Follow/Against 3 & 10
+  strategies[6].pick = spin10k(() => (p3/3)*100);
+  strategies[7].pick = spin10k(() => 100 - (p3/3)*100);
+  strategies[8].pick = spin10k(() => (p10/10)*100);
+  strategies[9].pick = spin10k(() => 100 - (p10/10)*100);
+
+  // 10-11. Streak Logic
+  strategies[10].pick = (isStreakP || isStreakB) ? (isStreakP?"P":"B") : strategies[3].pick;
+  strategies[11].pick = (isStreakP || isStreakB) ? (isStreakP?"B":"P") : strategies[4].pick;
+
+  // 12-13. Win/Lose Last Side
+  strategies[12].pick = strategies[3].pick;
+  strategies[13].pick = strategies[4].pick;
+
+  // 14-15. Half Game
+  let halfIdx = Math.floor(total/2);
+  let firstHalf = results.slice(0, halfIdx);
+  let pFH = firstHalf.filter(x=>x==="P").length;
+  let bFH = firstHalf.filter(x=>x==="B").length;
+  strategies[14].pick = spin10k(() => (pFH/(pFH+bFH))*100);
+  strategies[15].pick = spin10k(() => 100 - (pFH/(pFH+bFH))*100);
+
+  // 16-17. Bias
+  strategies[16].pick = "P";
+  strategies[17].pick = "B";
+
+  // 18. Switch
+  strategies[18].pick = strategies[4].pick;
+
+  // 19. Previous Hand
+  let prev = results[results.length-2];
+  strategies[19].pick = prev ? (prev==="P"?"P":"B") : strategies[3].pick;
+
+  // 20. Anti Tie
+  let lastNoTie = getLast(1)[0];
+  strategies[20].pick = lastNoTie || "P";
+
+  // 21-22. Heavy Bias (70%)
+  strategies[21].pick = spin10k(() => 30); // 30% P, 70% B
+  strategies[22].pick = spin10k(() => 70); // 70% P, 30% B
+
+  // 23. Anti Volatility (ตามเมื่อมั่น สวนเมื่อกระจัด)
+  let volatility = (p6 > 4 || b6 > 4) ? 0 : 1; // 0=Stable, 1=Volatile
+  strategies[23].pick = volatility === 0 ? strategies[3].pick : strategies[4].pick;
+
+  // 24. Follow Trend
+  strategies[24].pick = strategies[1].pick;
+
+  // 25. Break Pattern
+  strategies[25].pick = strategies[9].pick; // Against 10 mostly breaks long patterns
+
+  // --- MASTER AI (Strategy 26) ---
+  // หาสูตรที่แม่นที่สุดในช่วง 10 ไม้ล่าสุด
+  let bestS = null;
+  let bestScore = -1;
+  
+  strategies.slice(0, 26).forEach(s => {
+    if(s.track.length > 5) {
+      let score = calculateAccuracy(s.track);
+      // Bonus คะแนนถ้า track ยาว (Consistency)
+      score = score + (s.track.length * 0.5); 
+      if(score > bestScore) {
+        bestScore = score;
+        bestS = s;
+      }
+    }
+  });
+
+  // ถ้าไม่มีสูตรที่โดดเด่น ให้ใช้วิธี Vote
+  if(!bestS) {
+    let votes = {P:0, B:0};
+    strategies.slice(0, 26).forEach(s => {
+      if(s.pick) votes[s.pick]++;
+    });
+    strategies[26].pick = votes.P >= votes.B ? "P" : "B";
+    strategies[26].subName = "VOTE SYSTEM";
+  } else {
+    strategies[26].pick = bestS.pick;
+    strategies[26].subName = "BEST: " + bestS.name;
+  }
+
+  renderUI();
+}
+
+function addResult(r) {
+  results.push(r);
+  
+  if (strategies.length > 0) {
+    strategies.forEach(s => {
+      if (s.pick && r !== "T") {
+        s.track.push(s.pick === r ? "✅" : "❌");
+      }
+    });
+  }
+
+  calculateNextPick();
+}
+
+
+function undo() {
+  if(!results.length) return;
+  results.pop();
+  strategies.forEach(s => s.track.pop());
+  calculateNextPick();
+  renderUI(); // Re-render to show previous state
+}
+
+function clearAll() {
+  results = [];
+  initStrategies();
+  renderUI();
+}
+
+// ===== RENDER & HELPERS =====
+function calculateAccuracy(track) {
+  if(!track.length) return 0;
+  let wins = track.filter(x => x === "✅").length;
+  return Math.round((wins / track.length) * 100);
+}
+
+function renderUI() {
+  // Stats
+  const p = results.filter(x => x === "P").length;
+  const b = results.filter(x => x === "B").length;
+  const t = results.filter(x => x === "T").length;
+  const tot = results.length;
+  
+  document.getElementById("pCount").innerText = p;
+  document.getElementById("bCount").innerText = b;
+  document.getElementById("tCount").innerText = t;
+  document.getElementById("total").innerText = tot;
+
+  // Bead Road
+  const road = document.getElementById("beadRoad");
+  road.innerHTML = "";
+  results.forEach((r, i) => {
+    let el = document.createElement("div");
+    el.className = `cell-plate ${r}-plate`;
+    el.innerText = r;
+    // จัดวางแบบ Grid 6 แถว (ตามโจทย์เดิม)
+    el.style.gridRow = (i % 6) + 1;
+    el.style.gridColumn = Math.floor(i / 6) + 1;
+    road.appendChild(el);
+  });
+
+  // Master Pick Display
+ const master = strategies[26];  // ✅ เพิ่มบรรทัดนี้
+const masterTrack = master.track.slice(-25);
+const masterEl = document.getElementById("masterPick");
+
+if(master.pick) {
+
+masterEl.innerText = master.pick;
+masterEl.className = `recommend-result ${master.pick}`;
+
+document.getElementById("bestStratName").innerText =
+  master.subName || "CALCULATING...";
+
+let acc = calculateAccuracy(master.track);
+
+const confEl = document.getElementById("confidence");
+
+// 🔥 กัน class ซ้อน + reset animation ทุกครั้ง
+confEl.classList.remove("blink-confidence");
+
+if (master.track.length) {
+  confEl.innerText = `${acc}%`;
+
+  // รีสตาร์ท animation ให้กระพริบทุก update
+  void confEl.offsetWidth;
+  confEl.classList.add("blink-confidence");
+
+} else {
+  confEl.innerText = "-";
+}
+
+document.getElementById("accuracyDisplay").innerText =
+  `แม่น: ${acc}% (${master.track.length} ตา)`;
+  
+  } else {
+    masterEl.innerText = "เริ่มต้นใส่ผล";
+    masterEl.className = "recommend-result";
+  }
+
+  // Last 5 Dots
+  const last5Div = document.getElementById("last5Stats");
+  const last5 = results.slice(-5);
+  last5Div.innerHTML = last5.map(r => 
+    `<span style="color:var(--${r==='P'?'neon-blue':r==='B'?'neon-red':'neon-green'})">${r}</span>`
+  ).join("") || "-";
+
+  // Pattern Text
+  const trendDiv = document.getElementById("patternTrend");
+  if(p > b) trendDiv.innerHTML = `<span style="color:var(--neon-blue)">Player</span> นำ ${p-b} ตา`;
+  else if(b > p) trendDiv.innerHTML = `<span style="color:var(--neon-red)">Banker</span> นำ ${b-p} ตา`;
+  else trendDiv.innerText = "สมดุล";
+
+  // Quick View (Top 3)
+  let sortedStrats = [...strategies].sort((a,b) => calculateAccuracy(b.track) - calculateAccuracy(a.track));
+  let topHTML = "";
+  sortedStrats.slice(0, 3).forEach((s, i) => {
+    let acc = calculateAccuracy(s.track);
+    if(s.track.length > 0) {
+      topHTML += `
+      <div class="q-row">
+        <span>${s.name.substring(0, 15)}..</span>
+        <span>
+          <span class="q-badge bad-${s.pick}">${s.pick}</span>
+          ${acc}%
+        </span>
+      </div>`;
+    }
+  });
+  document.getElementById("topStrats").innerHTML = topHTML || "<div style='font-size:12px; color:#666; text-align:center'>ยังไม่มีข้อมูล</div>";
+
+  // Strategies Grid
+  const grid = document.getElementById("strategiesGrid");
+  grid.innerHTML = "";
+  strategies.forEach((s, i) => {
+    if(i === 26) return; // Skip master in list
+    
+    let acc = calculateAccuracy(s.track);
+    let isBest = false;
+    // Highlight สูตรที่แม่นสุด ถ้าแม่นเกิน 60% และเล่นมากกว่า 5 ตา
+    if(acc > 60 && s.track.length >= 5) isBest = true;
+
+    let div = document.createElement("div");
+    div.className = `strategy-card ${isBest ? 'best' : ''}`;
+    div.innerHTML = `
+      <div class="s-name">${s.name}</div>
+      <div class="s-pick" style="color:${s.pick==='P'?'var(--neon-blue)':s.pick==='B'?'var(--neon-red)':'#fff'}">
+        ${s.pick || '-'}
+      </div>
+      <div class="track-dots">
+        ${s.track.slice(-10).map(t => `<div class="dot" style="background:${t==='✅'?'var(--neon-green)':'#555'}"></div>`).join('')}
+      </div>
+      <div class="s-acc">แม่น ${acc}% (${s.track.length})</div>
+    `;
+    grid.appendChild(div);
+}); // <-- ปิด forEach
+
+// ===== MASTER TRACK GRID (12 ช่องต่อแถว) =====
+const gridTrack = document.getElementById("masterTrackGrid");
+
+if(gridTrack && strategies[26]){
+  gridTrack.innerHTML = "";
+let masterTrack = strategies[26].track.slice(-25);
+
+// ✅ เติมให้ครบ 40 ช่อง (2 แถว × 20 ช่อง)
+while(masterTrack.length < 40){
+  masterTrack.unshift(null);
+}
+
+// ✅ กลับด้าน (ขวา → ซ้าย)
+masterTrack.reverse();
+
+  masterTrack.forEach((res) => {
+    let box = document.createElement("div");
+
+    if(res === "✅"){
+      box.className = "master-box master-win";
+      box.innerText = "✔";
+    } 
+    else if(res === "❌"){
+      box.className = "master-box master-lose";
+      box.innerText = "✖";
+    } 
+    else {
+      box.className = "master-box";
+      box.style.background = "#111"; // ช่องว่าง
+    }
+
+    gridTrack.appendChild(box);
+  });
+}
+
+} // <-- ปิด renderUI() ตรงนี้
+
+
+/* ===== LOGIN (API VERSION) ===== */
+async function login(){
+
+  const userInput = document.getElementById("user");
+  const passInput = document.getElementById("pass");
+
+  const loginBoxEl = document.getElementById("loginBox");
+  const appEl = document.getElementById("app");
+  const loginErrEl = document.getElementById("loginError");
+
+  loginErrEl.textContent="กำลังตรวจสอบ...";
+
+  try{
+
+    const res = await fetch(
+      "https://morning-block-55bb.havanalanna.workers.dev/?user="
+      + encodeURIComponent(userInput.value)
+      + "&pass=" + encodeURIComponent(passInput.value)
+    );
+
+    const data = await res.json();
+
+    if(data.status==="ok"){
+
+      loginBoxEl.style.display="none";
+      appEl.style.display="block";
+      initStrategies();   // ⭐ ต้องเพิ่มบรรทัดนี้
+      renderUI(); // ⭐ ของคุณใช้ตัวนี้ ไม่ใช่ render()
+
+      /* 🔒 ตรวจ License ทุก 30 วิ */
+      const user = userInput.value;
+      const pass = passInput.value;
+
+      setInterval(async ()=>{
+
+        try{
+
+          const r = await fetch(
+            "https://morning-block-55bb.havanalanna.workers.dev/?user="
+            + encodeURIComponent(user)
+            + "&pass=" + encodeURIComponent(pass)
+          );
+
+          const j = await r.json();
+
+          if(j.status!=="ok"){
+            alert("⛔ License ถูกปิดใช้งาน");
+            location.reload();
+          }
+
+        }catch(e){
+          console.log("License check error");
+        }
+
+      },30000);
+
+    }else{
+      loginErrEl.textContent="User หรือ Password ไม่ถูกต้อง";
+    }
+
+  }catch(e){
+    loginErrEl.textContent="ไม่สามารถเชื่อมต่อ License Server";
+  }
+
+}
+
+// ===== SHOW / HIDE PASSWORD =====
+function togglePassword() {
+  const pass = document.getElementById("pass");
+  const check = document.getElementById("showPass");
+
+  pass.type = check.checked ? "text" : "password";
+}
+
+</script>
+</body>
+</html>

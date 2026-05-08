@@ -665,6 +665,12 @@ function undo() {
 function clearAll() {
   results = [];
   initStrategies();
+
+  document.getElementById("confidence").innerText = "-";
+  document.getElementById("bestStratName").innerText = "-";
+  document.getElementById("masterPick").innerText = "รอข้อมูล...";
+  document.getElementById("accuracyDisplay").innerText = "แม่น: 0%";
+
   renderUI();
 }
 

@@ -366,7 +366,9 @@ button.action-btn.t:hover{background:var(--neon-green); color:#000;}
 <div class="container" id="app" style="display:none">
   
   <h1>GENIUS RANDOM AI ULTRA V2</h1>
-  <div class="expire"></div>
+  <div class="expire">
+หมดอายุ: 27 พฤษภาคม พ.ศ. 2569
+</div>
 
   <div class="controls">
     <button class="action-btn p" onclick="addResult('P')">🔵 Player</button>
@@ -461,7 +463,37 @@ button.action-btn.t:hover{background:var(--neon-green); color:#000;}
 
 <script>
 // ===== CONFIG & STATE =====
-const EXPIRE_DATE = new Date("2026-05-30T23:59:59");
+const EXPIRE_DATE = new Date("2026-05-27T23:59:59");
+
+// ตรวจหมดอายุ
+if(new Date() > EXPIRE_DATE){
+  document.body.innerHTML = `
+    <div style="
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
+      background:#020617;
+      color:#fff;
+      font-family:sans-serif;
+      flex-direction:column;
+    ">
+      <h1 style="color:#ff4757;font-size:42px;">
+        โปรแกรมหมดอายุ
+      </h1>
+
+      <div style="
+        margin-top:10px;
+        color:#aaa;
+        font-size:18px;
+      ">
+        หมดอายุวันที่ 27 พฤษภาคม พ.ศ. 2569
+      </div>
+    </div>
+  `;
+  throw new Error("Expired");
+}
+
 let results = [];
 let strategies = [];
 
